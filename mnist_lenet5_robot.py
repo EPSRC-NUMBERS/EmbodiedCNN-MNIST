@@ -66,7 +66,7 @@ y_test = np_utils.to_categorical(y_test, num_classes) # One-hot encode the label
 
 reps = 5
 ssplit = np.array([128,256,512,1024,3200,6400,60000]) # number of examples
-oweights = np.array([0.5,0.5,0.5,0.5,0.5,0.3,0.3])
+oweights = np.array([1,1,1,0.5,0.5,0.5,0.25])*0.625
 nsplit = ssplit.shape[0]
 score = np.zeros(shape=(nsplit,6))
 acc1 = np.zeros(shape=(reps,nsplit))
@@ -87,9 +87,7 @@ for k in range(reps):
 		matrix_split = matrix_train[(ssplit[i]*a):(ssplit[i]*(a+1))]
 		print('a=',a,'split = ',(ssplit[i]*a),'-',(ssplit[i]*(a+1)),' N = ',x_split.shape[0])
 		drop_prob_1 = 0.0
-		drop_prob_2 = 0.2
-		if (ssplit[i]>1000):
-			drop_prob_2 = 0.3
+		drop_prob_2 = 0.3
 
 		inp = Input(shape=(height, width, depth)) # N.B. TensorFlow back-end expects channel dimension last
 		o = Convolution2D(filters=6, kernel_size=(3, 3), padding='same', kernel_initializer='he_uniform', activation='relu')(inp)
@@ -112,21 +110,18 @@ for k in range(reps):
 			verbose=0)
 
 		o = Dense(120, kernel_initializer='he_uniform', activation='relu')(o) # Hidden ReLU layer
+		o = Dropout(drop_prob_2, name="hidden_dropout1")(o)
 		o = Dense(84, kernel_initializer='he_uniform', activation='relu')(o) # Hidden ReLU layer
 		o = concatenate([o, o2],axis=1,name="concatenate") 
 		o = BatchNormalization(name='block_norm2')(o)
-		o = Dropout(drop_prob_2, name="second_dropout")(o)
+		o = Dropout(drop_prob_2, name="hidden_dropout2")(o)
 		layerc = Dense(num_classes, kernel_initializer='glorot_uniform', activation='softmax', name='class_output')(o) # Output softmax layer
 
 		model = Model(inputs=[inp],outputs=[layerc,o2])
 		#plot_model(model)
-		drop_prob_1 = 0.2
-		cnt=0
 		for layer in model.layers:
 			if (hasattr(layer, 'rate')):
 				layer.rate = layer.rate+0.2 
-				print(layer.rate)
-				cnt=cnt+1
 
 		model.compile(loss={"class_output": 'categorical_crossentropy', "fingers_inout": 'binary_crossentropy'},
 			 		  loss_weights=[1,oweights[i]],

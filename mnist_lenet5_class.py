@@ -33,7 +33,7 @@ kernel_size = 3 # we will use 3x3 kernels throughout
 pool_size = 2 # we will use 2x2 pooling throughout
 conv_depth = 32 # use 32 kernels in both convolutional layers
 drop_prob_1 = 0.2 # dropout after pooling with probability 0.25
-drop_prob_2 = 0.25 # dropout in the FC layer with probability 0.5
+drop_prob_2 = 0.5 # dropout in the FC layer with probability 0.5
 hidden_size = 128 # there will be 128 neurons in both hidden layers
 l1_lambda = 0.0001 # use 0.0001 as a l1-regularisation factor
 
@@ -84,9 +84,7 @@ for k in range(reps):
 		matrix_split = matrix_train[(ssplit[i]*a):(ssplit[i]*(a+1))]
 		print('a=',a,'split = ',(ssplit[i]*a),'-',(ssplit[i]*(a+1)),' N = ',x_split.shape[0])
 		drop_prob_1 = 0.0
-		if (ssplit[i]>1000):
-			drop_prob_1 = 0.2
-		drop_prob_2 = 0.2+drop_prob_1
+		drop_prob_2 = 0.3
 
 		inp = Input(shape=(height, width, depth)) # N.B. TensorFlow back-end expects channel dimension last
 		o = Convolution2D(filters=6, kernel_size=(3, 3), padding='same', kernel_initializer='he_uniform', activation='relu')(inp)
@@ -103,26 +101,24 @@ for k in range(reps):
 		earlyStopping=keras.callbacks.EarlyStopping(monitor='loss', patience=3, verbose=1, mode='auto', restore_best_weights=True)
 		model1 = Model(inputs=inp,outputs=o2)
 
-		model1.compile(loss='categorical_crossentropy',optimizer='adam',metrics=['mse'])
+		model1.compile(loss='categorical_crossentropy',optimizer='adam')
 		model1.fit(x_split[:ssplit[i],:],matrix_split[:ssplit[i],:],
 			epochs=num_epochs1,shuffle=True,callbacks=[earlyStopping],
 			verbose=0)
 
 		o = Dense(120, kernel_initializer='he_uniform', activation='relu')(o) # Hidden ReLU layer
+		o = Dropout(drop_prob_2, name="hidden_dropout1")(o)
 		o = Dense(84, kernel_initializer='he_uniform', activation='relu')(o) # Hidden ReLU layer
 		o = concatenate([o, o2],axis=1,name="concatenate") 
 		o = BatchNormalization(name='block_norm2')(o)
-		o = Dropout(drop_prob_2, name="second_dropout")(o)
+		o = Dropout(drop_prob_2, name="hidden_dropout2")(o)
 		layerc = Dense(num_classes, kernel_initializer='glorot_uniform', activation='softmax', name='class_output')(o) # Output softmax layer
 
 		model = Model(inputs=[inp],outputs=[layerc,o2])
 		#plot_model(model)
-		drop_prob_1 = 0.2
-		cnt=0
 		for layer in model.layers:
-			if (hasattr(layer, 'rate') and (cnt<2)):
-				layer.rate = drop_prob_1 
-				cnt=cnt+1
+			if (hasattr(layer, 'rate')):
+				layer.rate = layer.rate+0.2 #incresases the dropout rate for the full model
 
 		model.compile(loss={"class_output": 'categorical_crossentropy', "fingers_inout": 'categorical_crossentropy'},
 			 		  loss_weights=[1,oweights[i]],

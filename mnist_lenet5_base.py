@@ -29,7 +29,7 @@ num_epochs = 50 # we iterate 20 times over the entire training set
 kernel_size = 3 # we will use 3x3 kernels throughout
 pool_size = 2 # we will use 2x2 pooling throughout
 conv_depth = 32 # use 32 kernels in both convolutional layers
-drop_prob_1 = 0.25 # dropout after pooling with probability 0.2
+drop_prob_1 = 0.2 # dropout after pooling with probability 0.2
 drop_prob_2 = 0.5 # dropout in the FC layer with probability 0.25
 hidden_size = 128 # there will be 128 neurons in both hidden layers
 
@@ -66,10 +66,6 @@ for k in range(reps):
 		x_split = x_train[(ssplit[i]*a):(ssplit[i]*(a+1))]
 		y_split = y_train[(ssplit[i]*a):(ssplit[i]*(a+1))]
 		print('a=',a,'split = ',(ssplit[i]*a),'-',(ssplit[i]*(a+1)),' N = ',x_split.shape[0])
-		drop_prob_1 = 0.0
-		if (ssplit[i]>1000):
-			drop_prob_1 = 0.2
-		drop_prob_2 = 0.2+drop_prob_1
 
 		inp = Input(shape=(height, width, depth)) # N.B. TensorFlow back-end expects channel dimension last
 		o = Convolution2D(filters=6, kernel_size=(3, 3), padding='same', kernel_initializer='he_uniform', activation='relu')(inp)
@@ -82,6 +78,8 @@ for k in range(reps):
 		o = Dropout(drop_prob_1)(o)
 		o = Flatten()(o)
 		o = Dense(120, kernel_initializer='he_uniform', activation='relu')(o) # Hidden ReLU layer
+		o = BatchNormalization(name='block_norm1')(o)
+		o = Dropout(drop_prob_2)(o)
 		o = Dense(84, kernel_initializer='he_uniform', activation='relu')(o) # Hidden ReLU layer
 		o = BatchNormalization(name='block_norm2')(o)
 		o = Dropout(drop_prob_2)(o)
