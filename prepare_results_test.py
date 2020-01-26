@@ -24,8 +24,8 @@ if not os.path.exists(folder_output):
 	os.makedirs(folder_output+'stats')
 	os.makedirs(folder_output+'comparisons')
 
-N=50 #number of epochs
-reps=18
+N=25 #number of epochs
+reps=4
 
 ssplit = np.zeros((7,1)) # number of examples
 nsplit = ssplit.shape[0]
@@ -84,7 +84,7 @@ for i in range(nsplit):
 		likelihood3[:,k] = my_data3[1:N+1:,8]
 
 		#robot
-		my_data4 = np.genfromtxt(folder+str(k)+'/training_robot6_conv2d'+"{:03d}".format(i)+'.log',delimiter=',')
+		my_data4 = np.genfromtxt(folder+str(k)+'/training_robotT_conv2d'+"{:03d}".format(i)+'.log',delimiter=',')
 		loss4[:,k] = my_data4[1:N+1,3]
 		accuracy4[:,k] = (my_data4[1:N+1,1]*ssplit[i] + my_data4[1:N+1,7]*ntest)/(ssplit[i]+ntest)
 		likelihood4[:,k] = my_data4[1:N+1,8]
@@ -156,7 +156,7 @@ for i in range(nsplit):
 
 	np.savetxt(folder_output+'stats/results_mnist_robot'+"{:03d}".format(i)+'.csv', full_data4, delimiter=",")
 
-	EQVAR = True
+	EQVAR = False
 	#ttest for accuracy
 	ttest12a = ttest_ind_from_stats(mean1=full_data1[:N,0],std1=full_data1[:N,1],nobs1=reps,mean2=full_data2[:,0],std2=full_data2[:,1],nobs2=reps,equal_var=EQVAR)
 	ttest13a = ttest_ind_from_stats(mean1=full_data1[:N,0],std1=full_data1[:N,1],nobs1=reps,mean2=full_data3[:,0],std2=full_data3[:,1],nobs2=reps,equal_var=EQVAR)
