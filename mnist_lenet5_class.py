@@ -27,7 +27,7 @@ def get_available_gpus():
 
 
 batch_size = 32 # in each iteration, we consider 128 training examples at once
-num_epochs = 25 # we iterate twelve times over the entire training set
+num_epochs = 50 # we iterate twelve times over the entire training set
 num_epochs1 = 25 # epochs for the pre-training
 kernel_size = 3 # we will use 3x3 kernels throughout
 pool_size = 2 # we will use 2x2 pooling throughout
@@ -59,7 +59,7 @@ c_test = y_test
 y_train = np_utils.to_categorical(y_train, num_classes) # One-hot encode the labels
 y_test = np_utils.to_categorical(y_test, num_classes) # One-hot encode the labels
 
-reps = 5
+reps = 21
 ssplit = np.array([128,256,512,1024,3200,6400,60000]) # number of examples
 oweights = np.array([1,1,1,0.5,0.5,0.5,0.25])
 nsplit = ssplit.shape[0]
