@@ -25,8 +25,8 @@ if not os.path.exists(folder_output):
 	os.makedirs(folder_output+'stats')
 	os.makedirs(folder_output+'comparisons')
 
-N=25 #number of epochs
-reps=5
+N=50 #number of epochs
+reps=21
 
 ssplit = np.array([128,256,512,1024,3200,6400,60000]) # number of examples
 nsplit = ssplit.shape[0]
@@ -67,28 +67,28 @@ for i in range(nsplit):
 
 	for k in range(reps): # for all the repetitions
 		#Le-Net5
-		# my_data1 = np.genfromtxt(folder+str(k)+'/training_lenet5_'+"{:03d}".format(i)+'.log',delimiter=',')
-		# loss1[:,k] = my_data1[1:N+1,3]
-		# accuracy1[:,k] = (my_data1[1:N+1,1]*ssplit[i] + my_data1[1:N+1,4]*ntest)/(ssplit[i]+ntest)# cuts the header, line 0
-		# likelihood1[:,k] = my_data1[1:N+1,5]
+		my_data1 = np.genfromtxt(folder+str(k)+'/training_lenet5_'+"{:03d}".format(i)+'.log',delimiter=',')
+		loss1[:,k] = my_data1[1:N+1,3]
+		accuracy1[:,k] = (my_data1[1:N+1,1]*ssplit[i] + my_data1[1:N+1,4]*ntest)/(ssplit[i]+ntest)# cuts the header, line 0
+		likelihood1[:,k] = my_data1[1:N+1,5]
 
 		# #fingers-termometer representation
 		my_data2 = np.genfromtxt(folder+str(k)+'/training_class2_conv2d'+"{:03d}".format(i)+'.log',delimiter=',')
-		loss1[:,k] = my_data2[1:N+1,3]
-		accuracy1[:,k] = (my_data2[1:N+1,1]*ssplit[i] + my_data2[1:N+1,7]*ntest)/(ssplit[i]+ntest)
-		likelihood1[:,k] = (my_data2[1:N+1,2]*ssplit[i] + my_data2[1:N+1,8]*ntest)/(ssplit[i]+ntest)
+		loss2[:,k] = my_data2[1:N+1,3]
+		accuracy2[:,k] = (my_data2[1:N+1,1]*ssplit[i] + my_data2[1:N+1,7]*ntest)/(ssplit[i]+ntest)
+		likelihood2[:,k] = my_data2[1:N+1,8]
 
 		# #random
 		my_data3 = np.genfromtxt(folder+str(k)+'/training_random2_conv2d'+"{:03d}".format(i)+'.log',delimiter=',')
-		loss3[:,k] = my_data3[1:N+1,3]
-		accuracy3[:,k] = (my_data3[1:N+1,1]*ssplit[i] + my_data3[1:N+1,7]*ntest)/(ssplit[i]+ntest)
-		likelihood3[:,k] = (my_data3[1:N+1,2]*ssplit[i] + my_data3[1:N+1,8]*ntest)/(ssplit[i]+ntest)
+		# loss3[:,k] = my_data3[1:N+1,3]
+		# accuracy3[:,k] = (my_data3[1:N+1,1]*ssplit[i] + my_data3[1:N+1,7]*ntest)/(ssplit[i]+ntest)
+		# likelihood3[:,k] = my_data3[1:N+1:,8]
 
 		#robot
 		my_data4 = np.genfromtxt(folder+str(k)+'/training_robotT_conv2d'+"{:03d}".format(i)+'.log',delimiter=',')
 		loss4[:,k] = my_data4[1:N+1,3]
 		accuracy4[:,k] = (my_data4[1:N+1,1]*ssplit[i] + my_data4[1:N+1,7]*ntest)/(ssplit[i]+ntest)
-		likelihood4[:,k] = (my_data4[1:N+1,2]*ssplit[i] + my_data4[1:N+1,8]*ntest)/(ssplit[i]+ntest)
+		likelihood4[:,k] = my_data4[1:N+1,8]
 
 		for g in range(1,N):
 			if loss1[g,k] >loss1[g-1,k]:

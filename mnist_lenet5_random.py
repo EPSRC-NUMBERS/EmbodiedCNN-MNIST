@@ -99,9 +99,7 @@ for k in range(reps):
 		matrix_split = matrix_train[(ssplit[i]*a):(ssplit[i]*(a+1))]
 		print('a=',a,'split = ',(ssplit[i]*a),'-',(ssplit[i]*(a+1)),' N = ',x_split.shape[0])
 		drop_prob_1 = 0.0
-		if (ssplit[i]>1000):
-			drop_prob_1 = 0.2
-		drop_prob_2 = 0.2+drop_prob_1
+		drop_prob_2 = 0.3
 
 		inp = Input(shape=(height, width, depth)) # N.B. TensorFlow back-end expects channel dimension last
 		o = Convolution2D(filters=6, kernel_size=(3, 3), padding='same', kernel_initializer='he_uniform', activation='relu')(inp)
