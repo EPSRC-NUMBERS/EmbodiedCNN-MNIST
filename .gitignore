@@ -1,3 +1,5 @@
+*.log
+**/Logs
 Logs/0/training_class2_conv2d000.log
 Logs/0/training_class2_conv2d001.log
 Logs/0/training_class2_conv2d002.log

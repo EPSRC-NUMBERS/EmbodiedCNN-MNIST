@@ -59,9 +59,9 @@ c_test = y_test
 y_train = np_utils.to_categorical(y_train, num_classes) # One-hot encode the labels
 y_test = np_utils.to_categorical(y_test, num_classes) # One-hot encode the labels
 
-reps = 21
+reps = 11
 ssplit = np.array([128,256,512,1024,3200,6400,60000]) # number of examples
-oweights = np.array([1,1,1,0.5,0.5,0.5,0.25])
+oweights = np.array([1,1,1,0.5,0.5,0.5,0.3])
 nsplit = ssplit.shape[0]
 score = np.zeros(shape=(nsplit,6))
 acc1 = np.zeros(shape=(reps,nsplit))
