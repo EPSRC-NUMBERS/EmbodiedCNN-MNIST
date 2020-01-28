@@ -84,7 +84,7 @@ for i in range(nsplit):
 		likelihood3[:,k] = my_data3[1:N+1:,8]
 
 		#robot
-		my_data4 = np.genfromtxt(folder+str(k)+'/training_robotT_conv2d'+"{:03d}".format(i)+'.log',delimiter=',')
+		my_data4 = np.genfromtxt(folder+str(k)+'/training_robotP_conv2d'+"{:03d}".format(i)+'.log',delimiter=',')
 		loss4[:,k] = my_data4[1:N+1,3]
 		accuracy4[:,k] = (my_data4[1:N+1,1]*ssplit[i] + my_data4[1:N+1,7]*ntest)/(ssplit[i]+ntest)
 		likelihood4[:,k] = my_data4[1:N+1,8]

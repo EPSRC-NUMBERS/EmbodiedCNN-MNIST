@@ -16,7 +16,7 @@ x_test /= 255
 c_train = y_train
 c_test = y_test
 
-robot_inputs =np.random.random_sample((10,16))
+robot_inputs =np.zeros((10,16))
 robot_inputs[1:10,:] = np.genfromtxt('robot.cvs',delimiter=',').transpose()
 num_fingers = robot_inputs.shape[1]
 

@@ -66,19 +66,19 @@ y_test = np_utils.to_categorical(y_test, num_classes) # One-hot encode the label
 
 reps = 5
 ssplit = np.array([128,256,512,1024,3200,6400,60000]) # number of examples
-oweights = np.array([1,1,1,0.5,0.5,0.5,0.3])
+oweights = np.array([1,1,1,1,1,1,1])
 nsplit = ssplit.shape[0]
 score = np.zeros(shape=(nsplit,6))
 acc1 = np.zeros(shape=(reps,nsplit))
 gpus = get_available_gpus().size
 
 #first model - number/finger association
-# inp2 = Input(shape=(16,))
-# out2 = Dense(num_classes, kernel_initializer='glorot_uniform', activation='softmax', name='class_output2')(inp2) # Output softmax layer
-# model2 = Model(inputs=inp2,outputs=out2)	
-# model2.compile(loss='categorical_crossentropy',optimizer='adam',metrics=['mse'])
-# model2.fit(matrix_train,y_train,
-# 	epochs=1000,shuffle=True,verbose=0)
+inp2 = Input(shape=(16,))
+out2 = Dense(num_classes, kernel_initializer='glorot_uniform', bias_initializer='zeros', activation='softmax', name='class_output2')(inp2) # Output softmax layer
+model2 = Model(inputs=inp2,outputs=out2)	
+model2.compile(loss='categorical_crossentropy',optimizer='adam',metrics=['accuracy'])
+model2.fit(matrix_train,y_train,epochs=5,shuffle=True,verbose=1)
+out_weights2 = model2.get_layer('class_output2').get_weights()
 
 for k in range(reps):
 
@@ -92,8 +92,8 @@ for k in range(reps):
 		y_split = y_train[(ssplit[i]*a):(ssplit[i]*(a+1))]
 		matrix_split = matrix_train[(ssplit[i]*a):(ssplit[i]*(a+1))]
 		print('a=',a,'split = ',(ssplit[i]*a),'-',(ssplit[i]*(a+1)),' N = ',x_split.shape[0])
-		drop_prob_1 = 0.0
-		drop_prob_2 = 0.3
+		drop_prob_1 = 0.2
+		drop_prob_2 = 0.5
 
 		inp = Input(shape=(height, width, depth)) # N.B. TensorFlow back-end expects channel dimension last
 		o = Convolution2D(filters=6, kernel_size=(3, 3), padding='same', kernel_initializer='he_uniform', activation='relu')(inp)
@@ -110,38 +110,38 @@ for k in range(reps):
 		earlyStopping=keras.callbacks.EarlyStopping(monitor='loss', patience=3, verbose=1, mode='auto', restore_best_weights=True)
 		model1 = Model(inputs=inp,outputs=o2)
 
-		model1.compile(loss='mse',optimizer='rmsprop',metrics=['mse'])
+		model1.compile(loss='binary_crossentropy',optimizer='rmsprop',metrics=['mse'])
 		model1.fit(x_split[:ssplit[i],:],matrix_split[:ssplit[i],:],
-			epochs=num_epochs1,shuffle=True,callbacks=[earlyStopping],
+			epochs=1,shuffle=True,callbacks=[earlyStopping],
 			verbose=0)
 
 		o = Dense(120, kernel_initializer='he_uniform', activation='relu')(o) # Hidden ReLU layer
 		o = BatchNormalization(name='block_norm1')(o)
 		o = Dropout(drop_prob_2, name="hidden_dropout1")(o)
 		o = Dense(84, kernel_initializer='he_uniform', activation='relu')(o) # Hidden ReLU layer
+		o = BatchNormalization(name='block_norm2')(o)
 		o = concatenate([o, o2],axis=1,name="concatenate") 
-		#o = BatchNormalization(name='block_norm2')(o)
-		#o = Dropout(drop_prob_2, name="hidden_dropout2")(o)
+		o = Dropout(drop_prob_2, name="hidden_dropout2")(o)
 		layerc = Dense(num_classes, kernel_initializer='glorot_uniform', activation='softmax', name='class_output')(o) # Output softmax layer
 
 		model = Model(inputs=[inp],outputs=[layerc,o2])
-		#plot_model(model)
-		for layer in model.layers:
-			if (hasattr(layer, 'rate')):
-				layer.rate = layer.rate+0.2 #incresases the dropout rate for the full model
+		# #plot_model(model)
+		# for layer in model.layers:
+		# 	if (hasattr(layer, 'rate')):
+		# 		layer.rate = layer.rate+0.2 #incresases the dropout rate for the full model
 
 		model.compile(loss={"class_output": 'categorical_crossentropy', "fingers_inout": 'binary_crossentropy'},
 			 		  loss_weights=[1,oweights[i]],
 					  optimizer='adam',
 					  metrics={"class_output": ['accuracy',acc_likelihood], "fingers_inout": ['mse']})
 
-		# hidden_size=84
-		# out_weights = model.get_layer('class_output').get_weights()
-		# out_weights2 = model2.get_layer('class_output2').get_weights()
-		# out_weights[0][hidden_size:,:] = out_weights2[0]
-		# model.get_layer('class_output').set_weights(out_weights)
+		hidden_size=84
+		out_weights = model.get_layer('class_output').get_weights()
+		out_weights[0][hidden_size:,:] = out_weights2[0]
+		out_weights[1] = out_weights2[1]
+		model.get_layer('class_output').set_weights(out_weights)
 
-		csv_logger = CSVLogger('./Logs/'+str(k)+'/training_robotT_conv2d'+"{:03d}".format(i)+'.log')
+		csv_logger = CSVLogger('./Logs/'+str(k)+'/training_robotP_conv2d'+"{:03d}".format(i)+'.log')
 		history = model.fit([x_split], [y_split,matrix_split],
 									batch_size=batch_size,
 									epochs=num_epochs,
