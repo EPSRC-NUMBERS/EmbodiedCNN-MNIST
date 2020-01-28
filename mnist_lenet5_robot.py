@@ -29,7 +29,7 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3' # removes the tensorflow initial inform
 
 
 batch_size = 32 # in each iteration, we consider 128 training examples at once
-num_epochs = 50 # we iterate twelve times over the entire training set
+num_epochs = 25 # we iterate twelve times over the entire training set
 num_epochs1 = 25 # epochs for the pre-training
 kernel_size = 3 # we will use 3x3 kernels throughout
 pool_size = 2 # we will use 2x2 pooling throughout
@@ -64,15 +64,21 @@ matrix_test = np.load('test_robot'+".npy")
 y_train = np_utils.to_categorical(y_train, num_classes) # One-hot encode the labels
 y_test = np_utils.to_categorical(y_test, num_classes) # One-hot encode the labels
 
-reps = 11
+reps = 5
 ssplit = np.array([128,256,512,1024,3200,6400,60000]) # number of examples
-oweights = np.array([1,1,1,0.5,0.5,0.5,0.25])
+oweights = np.array([1,1,1,0.5,0.5,0.5,0.3])
 nsplit = ssplit.shape[0]
 score = np.zeros(shape=(nsplit,6))
 acc1 = np.zeros(shape=(reps,nsplit))
 gpus = get_available_gpus().size
 
 #first model - number/finger association
+# inp2 = Input(shape=(16,))
+# out2 = Dense(num_classes, kernel_initializer='glorot_uniform', activation='softmax', name='class_output2')(inp2) # Output softmax layer
+# model2 = Model(inputs=inp2,outputs=out2)	
+# model2.compile(loss='categorical_crossentropy',optimizer='adam',metrics=['mse'])
+# model2.fit(matrix_train,y_train,
+# 	epochs=1000,shuffle=True,verbose=0)
 
 for k in range(reps):
 
@@ -104,29 +110,36 @@ for k in range(reps):
 		earlyStopping=keras.callbacks.EarlyStopping(monitor='loss', patience=3, verbose=1, mode='auto', restore_best_weights=True)
 		model1 = Model(inputs=inp,outputs=o2)
 
-		model1.compile(loss='logcosh',optimizer='adam')
+		model1.compile(loss='mse',optimizer='rmsprop',metrics=['mse'])
 		model1.fit(x_split[:ssplit[i],:],matrix_split[:ssplit[i],:],
 			epochs=num_epochs1,shuffle=True,callbacks=[earlyStopping],
 			verbose=0)
 
 		o = Dense(120, kernel_initializer='he_uniform', activation='relu')(o) # Hidden ReLU layer
+		o = BatchNormalization(name='block_norm1')(o)
 		o = Dropout(drop_prob_2, name="hidden_dropout1")(o)
 		o = Dense(84, kernel_initializer='he_uniform', activation='relu')(o) # Hidden ReLU layer
 		o = concatenate([o, o2],axis=1,name="concatenate") 
-		o = BatchNormalization(name='block_norm2')(o)
-		o = Dropout(drop_prob_2, name="hidden_dropout2")(o)
+		#o = BatchNormalization(name='block_norm2')(o)
+		#o = Dropout(drop_prob_2, name="hidden_dropout2")(o)
 		layerc = Dense(num_classes, kernel_initializer='glorot_uniform', activation='softmax', name='class_output')(o) # Output softmax layer
 
 		model = Model(inputs=[inp],outputs=[layerc,o2])
 		#plot_model(model)
 		for layer in model.layers:
 			if (hasattr(layer, 'rate')):
-				layer.rate = layer.rate+0.2 
+				layer.rate = layer.rate+0.2 #incresases the dropout rate for the full model
 
 		model.compile(loss={"class_output": 'categorical_crossentropy', "fingers_inout": 'binary_crossentropy'},
 			 		  loss_weights=[1,oweights[i]],
 					  optimizer='adam',
 					  metrics={"class_output": ['accuracy',acc_likelihood], "fingers_inout": ['mse']})
+
+		# hidden_size=84
+		# out_weights = model.get_layer('class_output').get_weights()
+		# out_weights2 = model2.get_layer('class_output2').get_weights()
+		# out_weights[0][hidden_size:,:] = out_weights2[0]
+		# model.get_layer('class_output').set_weights(out_weights)
 
 		csv_logger = CSVLogger('./Logs/'+str(k)+'/training_robotT_conv2d'+"{:03d}".format(i)+'.log')
 		history = model.fit([x_split], [y_split,matrix_split],
