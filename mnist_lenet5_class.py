@@ -65,7 +65,7 @@ reps = 5
 ssplit = np.array([128,256,512,1024,3200,6400,60000]) # number of examples
 oweights = np.array([1,1,1,0.5,0.5,0.5,0.3])
 nsplit = ssplit.shape[0]
-score = np.zeros(shape=(nsplit,6))
+score = np.zeros(shape=(nsplit,7))
 acc1 = np.zeros(shape=(reps,nsplit))
 gpus = get_available_gpus().size
 
@@ -92,8 +92,6 @@ for k in range(reps):
 		y_split = y_train[(ssplit[i]*a):(ssplit[i]*(a+1))]
 		matrix_split = matrix_train[(ssplit[i]*a):(ssplit[i]*(a+1))]
 		print('a=',a,'split = ',(ssplit[i]*a),'-',(ssplit[i]*(a+1)),' N = ',x_split.shape[0])
-		drop_prob_1 = 0.0
-		drop_prob_2 = 0.5
 
 		inp = Input(shape=(height, width, depth)) # N.B. TensorFlow back-end expects channel dimension last
 		o = Convolution2D(filters=6, kernel_size=(3, 3), padding='same', kernel_initializer='he_uniform', activation='relu')(inp)
@@ -108,7 +106,6 @@ for k in range(reps):
 		o2 = Dense(num_fingers, activation='softmax', kernel_initializer='glorot_uniform', name="fingers_inout")(o)
 		
 		model1 = Model(inputs=inp,outputs=o2)
-
 		model1.compile(loss='categorical_crossentropy',optimizer='adam',metrics=['mse'])
 		model1.fit(x_split,matrix_split,epochs=1,shuffle=True,verbose=0)
 
@@ -149,8 +146,8 @@ for k in range(reps):
 		print('Test classification loss:', score[i][1])
 		print('Test finger loss:', score[i][2])
 		print('Test classification accuracy:', score[i][3])
-		print('Test classification likelihood:', score[i][4])
-		print('Test classification top2 acc:', score[i][5])
+		print('Test classification likelihood:', score[i][5])
+		print('Test classification top2 acc:', score[i][4])
 		print('Test fingers mse:', score[i][6])
 		K.clear_session()
 		end = time.time()

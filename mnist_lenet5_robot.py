@@ -31,13 +31,13 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3' # removes the tensorflow initial inform
 
 
 batch_size = 32 # in each iteration, we consider 128 training examples at once
-num_epochs = 25 # we iterate twelve times over the entire training set
+num_epochs = 50 # we iterate twelve times over the entire training set
 num_epochs1 = 25 # epochs for the pre-training
 kernel_size = 3 # we will use 3x3 kernels throughout
 pool_size = 2 # we will use 2x2 pooling throughout
 conv_depth = 32 # use 32 kernels in both convolutional layers
-drop_prob_1 = 0.2 # dropout after pooling with probability 0.25
-drop_prob_2 = 0.4 # dropout in the FC layer with probability 0.5
+drop_prob_1 = 0.2 # dropout after pooling with probability 0.2
+drop_prob_2 = 0.5 # dropout in the FC layer with probability 0.5
 hidden_size = 128 # there will be 128 neurons in both hidden layers
 l1_lambda = 0.0001 # use 0.0001 as a l1-regularisation factor
 
@@ -66,7 +66,7 @@ matrix_test = np.load('test_robot'+".npy")
 y_train = np_utils.to_categorical(y_train, num_classes) # One-hot encode the labels
 y_test = np_utils.to_categorical(y_test, num_classes) # One-hot encode the labels
 
-reps = 5
+reps = 11
 ssplit = np.array([128,256,512,1024,3200,6400,60000]) # number of examples
 oweights = np.array([1,1,0.5,0.5,0.5,0.5,0.3])
 nsplit = ssplit.shape[0]
@@ -87,15 +87,13 @@ for k in range(reps):
 	if not os.path.exists('./Logs/'+str(k)):
 		os.makedirs('./Logs/'+str(k))
 
-	for i in range(6,nsplit):
+	for i in range(nsplit):
 		start = time.time()
 		a=k%(x_train.shape[0]/ssplit[i])
 		x_split = x_train[(ssplit[i]*a):(ssplit[i]*(a+1))]
 		y_split = y_train[(ssplit[i]*a):(ssplit[i]*(a+1))]
 		matrix_split = matrix_train[(ssplit[i]*a):(ssplit[i]*(a+1))]
 		print('a=',a,'split = ',(ssplit[i]*a),'-',(ssplit[i]*(a+1)),' N = ',x_split.shape[0])
-		drop_prob_1 = 0.2
-		drop_prob_2 = 0.5
 
 		inp = Input(shape=(height, width, depth)) # N.B. TensorFlow back-end expects channel dimension last
 		o = Convolution2D(filters=6, kernel_size=(3, 3), padding='same', kernel_initializer='he_uniform', activation='relu')(inp)
@@ -151,8 +149,8 @@ for k in range(reps):
 		print('Test classification loss:', score[i][1])
 		print('Test finger loss:', score[i][2])
 		print('Test classification accuracy:', score[i][3])
-		print('Test classification likelihood:', score[i][4])
-		print('Test classification top2 acc:', score[i][5])
+		print('Test classification likelihood:', score[i][5])
+		print('Test classification top2 acc:', score[i][4])
 		print('Test fingers mse:', score[i][6])
 		K.clear_session()
 		end = time.time()
