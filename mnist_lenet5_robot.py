@@ -109,13 +109,10 @@ for k in range(reps):
 		o = Flatten()(o)
 		o2 = Dense(num_fingers, activation='sigmoid', bias_initializer='zeros',  kernel_initializer='glorot_uniform', name="fingers_inout")(o)
 
-		earlyStopping=keras.callbacks.EarlyStopping(monitor='loss', patience=3, verbose=1, mode='auto', restore_best_weights=True)
 		model1 = Model(inputs=inp,outputs=o2)
-
 		model1.compile(loss='binary_crossentropy',optimizer='rmsprop',metrics=['mse'])
-		model1.fit(x_split[:ssplit[i],:],matrix_split[:ssplit[i],:],
-			epochs=1,shuffle=True,callbacks=[earlyStopping],
-			verbose=0)
+		model1.compile(loss='categorical_crossentropy',optimizer='adam',metrics=['mse'])
+		model1.fit(x_split,matrix_split,epochs=1,shuffle=True,verbose=0)
 
 		o = Dense(120, kernel_initializer='he_uniform', activation='relu')(o) # Hidden ReLU layer
 		o = BatchNormalization(name='block_norm1')(o)
@@ -127,10 +124,6 @@ for k in range(reps):
 		layerc = Dense(num_classes, kernel_initializer='glorot_uniform', activation='softmax', name='class_output')(o) # Output softmax layer
 
 		model = Model(inputs=[inp],outputs=[layerc,o2])
-		# #plot_model(model)
-		# for layer in model.layers:
-		# 	if (hasattr(layer, 'rate')):
-		# 		layer.rate = layer.rate+0.2 #incresases the dropout rate for the full model
 
 		model.compile(loss={"class_output": 'categorical_crossentropy', "fingers_inout": 'binary_crossentropy'},
 			 		  loss_weights=[1,oweights[i]],
