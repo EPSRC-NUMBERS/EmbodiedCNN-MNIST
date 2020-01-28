@@ -20,6 +20,8 @@ def get_available_gpus():
 	local_device_protos = K.get_session().list_devices()
 	return np.array([x.name for x in local_device_protos if x.device_type == 'GPU'])
 
+def top_2_categorical_accuracy(y_true, y_pred):
+    return metrics.top_k_categorical_accuracy(y_true, y_pred, k=2) 
 
 os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
  
@@ -66,9 +68,9 @@ y_test = np_utils.to_categorical(y_test, num_classes) # One-hot encode the label
 
 reps = 5
 ssplit = np.array([128,256,512,1024,3200,6400,60000]) # number of examples
-oweights = np.array([1,1,1,1,1,1,1])
+oweights = np.array([1,1,0.5,0.5,0.5,0.5,0.3])
 nsplit = ssplit.shape[0]
-score = np.zeros(shape=(nsplit,6))
+score = np.zeros(shape=(nsplit,7))
 acc1 = np.zeros(shape=(reps,nsplit))
 gpus = get_available_gpus().size
 
@@ -85,7 +87,7 @@ for k in range(reps):
 	if not os.path.exists('./Logs/'+str(k)):
 		os.makedirs('./Logs/'+str(k))
 
-	for i in range(nsplit):
+	for i in range(6,nsplit):
 		start = time.time()
 		a=k%(x_train.shape[0]/ssplit[i])
 		x_split = x_train[(ssplit[i]*a):(ssplit[i]*(a+1))]
@@ -133,7 +135,7 @@ for k in range(reps):
 		model.compile(loss={"class_output": 'categorical_crossentropy', "fingers_inout": 'binary_crossentropy'},
 			 		  loss_weights=[1,oweights[i]],
 					  optimizer='adam',
-					  metrics={"class_output": ['accuracy',acc_likelihood], "fingers_inout": ['mse']})
+					  metrics={"class_output": ['accuracy',top_2_categorical_accuracy,acc_likelihood], "fingers_inout": ['mse']})
 
 		hidden_size=84
 		out_weights = model.get_layer('class_output').get_weights()
@@ -157,7 +159,8 @@ for k in range(reps):
 		print('Test finger loss:', score[i][2])
 		print('Test classification accuracy:', score[i][3])
 		print('Test classification likelihood:', score[i][4])
-		print('Test fingers mse:', score[i][5])
+		print('Test classification top2 acc:', score[i][5])
+		print('Test fingers mse:', score[i][6])
 		K.clear_session()
 		end = time.time()
 		print('Elapsed time', end-start)

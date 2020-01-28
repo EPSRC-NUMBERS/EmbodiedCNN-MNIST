@@ -20,6 +20,9 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3' # removes the tensorflow initial inform
 def acc_likelihood(y_true, y_pred):
     return K.mean(K.max(y_pred*y_true,1))
 
+def top_2_categorical_accuracy(y_true, y_pred):
+    return metrics.top_k_categorical_accuracy(y_true, y_pred, k=2) 
+	
 def get_available_gpus():
     local_device_protos = K.get_session().list_devices()
     return np.array([x.name for x in local_device_protos if x.device_type == 'GPU'])
@@ -91,7 +94,7 @@ for k in range(reps):
 
 		model.compile(loss='categorical_crossentropy', # using the cross-entropy loss function
 		              optimizer='adam', # using the Adam optimiser
-		              metrics=['accuracy',acc_likelihood]) # reporting the accuracy and the likelihood
+		              metrics=['accuracy',top_2_categorical_accuracy,acc_likelihood]) # reporting the accuracy and the likelihood
 
 		csv_logger = CSVLogger('./Logs/'+str(k)+'/training_lenet5_'+"{:03d}".format(i)+'.log')
 

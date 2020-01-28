@@ -86,8 +86,8 @@ for i in range(nsplit):
 		#robot
 		my_data4 = np.genfromtxt(folder+str(k)+'/training_robotP_conv2d'+"{:03d}".format(i)+'.log',delimiter=',')
 		loss4[:,k] = my_data4[1:N+1,3]
-		accuracy4[:,k] = (my_data4[1:N+1,1]*ssplit[i] + my_data4[1:N+1,7]*ntest)/(ssplit[i]+ntest)
-		likelihood4[:,k] = my_data4[1:N+1,8]
+		accuracy4[:,k] = (my_data4[1:N+1,1]*ssplit[i] + my_data4[1:N+1,8]*ntest)/(ssplit[i]+ntest)
+		likelihood4[:,k] = my_data4[1:N+1,9]
 
 		for g in range(1,N):
 			if loss1[g,k] >loss1[g-1,k]:
