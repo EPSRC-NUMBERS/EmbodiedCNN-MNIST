@@ -37,7 +37,7 @@ kernel_size = 3 # we will use 3x3 kernels throughout
 pool_size = 2 # we will use 2x2 pooling throughout
 conv_depth = 32 # use 32 kernels in both convolutional layers
 drop_prob_1 = 0.2 # dropout after pooling with probability 0.2
-drop_prob_2 = 0.2 # dropout in the FC layer with probability 0.5
+drop_prob_2 = 0.5 # dropout in the FC layer with probability 0.5
 hidden_size = 128 # there will be 128 neurons in both hidden layers
 l1_lambda = 0.0001 # use 0.0001 as a l1-regularisation factor
 
@@ -46,7 +46,7 @@ num_test = 10000 # there are 10000 test examples in MNIST
 
 height, width, depth = 28, 28, 1 # MNIST images are 28x28 and greyscale
 num_classes = 10 # there are 10 classes (1 per digit)
-num_fingers = 16
+num_fingers = 10
 
 #(x_train, y_train), (x_test, y_test) = mnist.load_data() # fetch MNIST data
 (x_train, y_train), (x_test, y_test) = np.load('mnistdata.npy')
@@ -58,8 +58,23 @@ x_test = x_test.astype('float32')
 x_train /= 255 # Normalise data to [0, 1] range
 x_test /= 255 # Normalise data to [0, 1] range
 
-matrix_train = np.load('train_robot'+".npy")
-matrix_test = np.load('test_robot'+".npy")
+thermometer = np.tril(np.ones((num_classes,num_fingers)))
+
+print(thermometer)
+
+i=0
+matrix_train = np.ones((y_train.shape[0],num_fingers))
+for x in y_train[:]:
+	idx = np.argmax(x)
+	matrix_train[i] = thermometer[idx]
+	i=i+1
+
+i=0
+matrix_test = np.ones((y_test.shape[0],num_fingers))
+for x in y_test[:]:
+	idx = np.argmax(x)
+	matrix_test[i]= thermometer[idx]
+	i=i+1
 
 y_train = np_utils.to_categorical(y_train, num_classes) # One-hot encode the labels
 y_test = np_utils.to_categorical(y_test, num_classes) # One-hot encode the labels
@@ -74,7 +89,7 @@ acc1 = np.zeros(shape=(reps,nsplit))
 gpus = get_available_gpus().size
 
 #first model - number/finger association
-inp2 = Input(shape=(16,))
+inp2 = Input(shape=(num_fingers,))
 out2 = Dense(num_classes, kernel_initializer='glorot_uniform', bias_initializer='zeros', activation='softmax', name='class_output2')(inp2) # Output softmax layer
 model2 = Model(inputs=inp2,outputs=out2)	
 model2.compile(loss='categorical_crossentropy',optimizer='adam',metrics=['accuracy'])
@@ -104,10 +119,10 @@ for k in range(reps):
 		o = BatchNormalization(name='block_normC2')(o)
 		o = Dropout(drop_prob_1)(o)
 		o = Flatten()(o)
-		o2 = Dense(num_fingers, activation='sigmoid',  kernel_initializer='glorot_uniform', name="fingers_inout")(o)
+		o2 = Dense(num_fingers, activation='sigmoid', kernel_initializer='glorot_uniform', name="fingers_inout")(o)
 
 		model1 = Model(inputs=inp,outputs=o2)
-		model1.compile(loss='mse',optimizer='rmsprop',metrics=['mse'])
+		model1.compile(loss='binary_crossentropy',optimizer='adam',metrics=['mse'])
 		model1.fit(x_split,matrix_split,epochs=1,shuffle=True,verbose=0)
 
 		o = Dense(120, kernel_initializer='he_uniform', activation='relu')(o) # Hidden ReLU layer
@@ -115,9 +130,9 @@ for k in range(reps):
 		o = Dropout(drop_prob_2, name="hidden_dropout1")(o)
 		o = Dense(84, kernel_initializer='he_uniform', activation='relu')(o) # Hidden ReLU layer
 		o = BatchNormalization(name='block_norm2')(o)
-		o = Dropout(drop_prob_2, name="hidden_dropout2")(o)
 		o = concatenate([o, o2],axis=1,name="concatenate") 
-		layerc = Dense(num_classes, activation='softmax', kernel_initializer='glorot_uniform', name='class_output')(o2) # Output softmax layer
+		o = Dropout(drop_prob_2, name="hidden_dropout2")(o)
+		layerc = Dense(num_classes, activation='softmax', kernel_initializer='glorot_uniform', name='class_output')(o) # Output softmax layer
 
 		model = Model(inputs=[inp],outputs=[layerc,o2])
 
@@ -126,7 +141,7 @@ for k in range(reps):
 					  optimizer='adam',
 					  metrics={"class_output": ['accuracy',top_2_categorical_accuracy,acc_likelihood], "fingers_inout": ['mse']})
 
-		hidden_size=0
+		hidden_size=84
 		out_weights = model.get_layer('class_output').get_weights()
 		out_weights[0][hidden_size:,:] = out_weights2[0]
 		out_weights[1] = out_weights2[1]
