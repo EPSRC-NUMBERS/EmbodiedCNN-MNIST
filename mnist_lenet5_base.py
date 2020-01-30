@@ -27,7 +27,7 @@ def get_available_gpus():
     local_device_protos = K.get_session().list_devices()
     return np.array([x.name for x in local_device_protos if x.device_type == 'GPU'])
 
-batch_size = 32 # in each iteration, we consider 128 training examples at once
+batch_size = 128 # in each iteration, we consider 128 training examples at once
 num_epochs = 50 # we iterate 20 times over the entire training set
 kernel_size = 3 # we will use 3x3 kernels throughout
 pool_size = 2 # we will use 2x2 pooling throughout
@@ -52,7 +52,7 @@ x_test /= 255 # Normalise data to [0, 1] range
 y_train = np_utils.to_categorical(y_train, num_classes) # Categorical labels - One-hot encode
 y_test = np_utils.to_categorical(y_test, num_classes) # same as train
 
-reps=21
+reps=5
 ssplit = np.array([128,256,512,1024,3200,6400,60000]) # number of examples
 nsplit = ssplit.shape[0]
 score = np.zeros(shape=(nsplit,3))
@@ -62,7 +62,7 @@ for k in range(reps):
 	if not os.path.exists('./Logs/'+str(k)):
 		os.makedirs('./Logs/'+str(k))
 
-	for i in range(nsplit):
+	for i in range(6,nsplit):
 		start = time.time()
 		#select the subset
 		a=k%(x_train.shape[0]/ssplit[i])

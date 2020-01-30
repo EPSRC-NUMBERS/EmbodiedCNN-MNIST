@@ -72,13 +72,13 @@ for i in range(nsplit):
 		likelihood4[:,k] = my_data1[1:N+1,6]
 
 		# #fingers-termometer representation
-		my_data2 = np.genfromtxt(folder+str(k)+'/training_class2_conv2d'+"{:03d}".format(i)+'.log',delimiter=',')
+		my_data2 = np.genfromtxt(folder+str(k)+'/training_class0_conv2d'+"{:03d}".format(i)+'.log',delimiter=',')
 		loss2[:,k] = my_data2[1:N+1,3]
 		accuracy2[:,k] = (my_data2[1:N+1,1]*ssplit[i] + my_data2[1:N+1,8]*ntest)/(ssplit[i]+ntest)
 		likelihood2[:,k] = my_data2[1:N+1,9]
 
 		# #random
-		my_data3 = np.genfromtxt(folder+str(k)+'/training_random2_conv2d'+"{:03d}".format(i)+'.log',delimiter=',')
+		my_data3 = np.genfromtxt(folder+str(k)+'/training_robot1_conv2d'+"{:03d}".format(i)+'.log',delimiter=',')
 		loss3[:,k] = my_data3[1:N+1,3]
 		accuracy3[:,k] = (my_data3[1:N+1,1]*ssplit[i] + my_data3[1:N+1,8]*ntest)/(ssplit[i]+ntest)
 		likelihood3[:,k] = my_data3[1:N+1:,8]

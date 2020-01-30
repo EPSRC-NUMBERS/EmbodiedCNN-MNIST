@@ -107,7 +107,7 @@ for k in range(reps):
 		o = Flatten()(o)
 		o2 = Dense(num_fingers, activation='sigmoid', kernel_initializer='random_normal', 
 			kernel_regularizer=l1(l1_lambda), bias_regularizer=l1(l1_lambda),
-			bias_initializer='zeros')(o)
+			bias_initializer='zeros',name="fingers_inout")(o)
 
 		# model1 = Model(inputs=inp,outputs=o2)
 		# model1.compile(loss='mse',optimizer='rmsprop',metrics=['mse'])
@@ -125,7 +125,7 @@ for k in range(reps):
 		model = Model(inputs=[inp],outputs=[layerc,o2])
 
 		model.compile(loss={"class_output": 'categorical_crossentropy', "fingers_inout": 'binary_crossentropy'},
-			 		  loss_weights=[1,oweights[i]],
+			 		  loss_weights=[1,1],
 					  optimizer='adam',
 					  metrics={"class_output": ['accuracy',top_2_categorical_accuracy,acc_likelihood], "fingers_inout": ['mse']})
 
@@ -134,6 +134,10 @@ for k in range(reps):
 		out_weights[0][hidden_size:,:] = out_weights2[0]
 		out_weights[1] = out_weights2[1]
 		model.get_layer('class_output').set_weights(out_weights)
+
+		batch_size = 32 
+		if (i>5):
+			batch_size = 128 
 
 		csv_logger = CSVLogger(folder+str(k)+'/training_robotP_conv2d'+"{:03d}".format(i)+'.log')
 		history = model.fit([x_split], [y_split,matrix_split],
