@@ -57,10 +57,12 @@ ssplit = np.array([128,256,512,1024,3200,6400,60000]) # number of examples
 nsplit = ssplit.shape[0]
 score = np.zeros(shape=(nsplit,3))
 
+folder = './Logs/'
+
 for k in range(reps):
 
-	if not os.path.exists('./Logs/'+str(k)):
-		os.makedirs('./Logs/'+str(k))
+	if not os.path.exists(folder+str(k)):
+		os.makedirs(folder+str(k))
 
 	for i in range(6,nsplit):
 		start = time.time()
@@ -96,7 +98,7 @@ for k in range(reps):
 		              optimizer='adam', # using the Adam optimiser
 		              metrics=['accuracy',top_2_categorical_accuracy,acc_likelihood]) # reporting the accuracy and the likelihood
 
-		csv_logger = CSVLogger('./Logs/'+str(k)+'/training_lenet5_'+"{:03d}".format(i)+'.log')
+		csv_logger = CSVLogger(folder+str(k)+'/training_lenet5_'+"{:03d}".format(i)+'.log')
 
 		model.fit(x_split, y_split, # Train the model using the current split of the training set...
 		          batch_size=batch_size, epochs=num_epochs,
