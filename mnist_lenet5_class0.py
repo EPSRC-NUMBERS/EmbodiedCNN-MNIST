@@ -75,7 +75,7 @@ matrix_test = y_test
 
 folder='./Logs/'
 
-for k in range(reps):
+for k in range(5,reps):
 
 	if not os.path.exists(folder+str(k)):
 		os.makedirs(folder+str(k))
@@ -115,6 +115,10 @@ for k in range(reps):
 			 		  loss_weights=[1,oweights[i]],
 					  optimizer='adam',
 					  metrics={"class_output": ['accuracy',top_2_categorical_accuracy,acc_likelihood], "fingers_inout": ['mse']})
+
+		batch_size = 32 
+		if (i>5):
+			batch_size = 128 
 
 		csv_logger = CSVLogger(folder+str(k)+'/training_class0_conv2d'+"{:03d}".format(i)+'.log')
 		history = model.fit([x_split], [y_split,matrix_split],

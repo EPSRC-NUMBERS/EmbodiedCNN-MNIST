@@ -73,7 +73,7 @@ gpus = get_available_gpus().size
 #first model - number/finger association
 folder='./Logs/'
 
-for k in range(reps):
+for k in range(5,reps):
 	#create randoms
 	random_inputs = np.random.random_sample((num_classes,num_fingers))
 
