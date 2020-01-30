@@ -29,7 +29,7 @@ def top_2_categorical_accuracy(y_true, y_pred):
     return metrics.top_k_categorical_accuracy(y_true, y_pred, k=2) 
 
 batch_size = 32 # in each iteration, we consider 128 training examples at once
-num_epochs = 25 # we iterate twelve times over the entire training set
+num_epochs = 50 # we iterate twelve times over the entire training set
 num_epochs1 = 25 # epochs for the pre-training
 kernel_size = 3 # we will use 3x3 kernels throughout
 pool_size = 2 # we will use 2x2 pooling throughout
@@ -107,10 +107,6 @@ for k in range(reps):
 		o = Flatten()(o)
 		o2 = Dense(num_fingers, activation='softmax',  kernel_initializer='glorot_uniform', name="fingers_inout")(o)
 
-		# model1 = Model(inputs=inp,outputs=o2)
-		# model1.compile(loss='mse',optimizer='rmsprop',metrics=['mse'])
-		# model1.fit(x_split,matrix_split,epochs=1,shuffle=True,verbose=0)
-
 		o = Dense(120, kernel_initializer='he_uniform', activation='relu')(o) # Hidden ReLU layer
 		o = BatchNormalization(name='block_norm1')(o)
 		o = Dropout(drop_prob_2, name="hidden_dropout1")(o)
@@ -134,6 +130,10 @@ for k in range(reps):
 		out_weights[1] = out_weights2[1]
 		model.get_layer('class_output').set_weights(out_weights)
 
+		batch_size = 32 
+		if (i>5):
+			batch_size = 128 
+			
 		csv_logger = CSVLogger(folder+str(k)+'/training_class2_conv2d'+"{:03d}".format(i)+'.log')
 		history = model.fit([x_split], [y_split,matrix_split],
 									batch_size=batch_size,
