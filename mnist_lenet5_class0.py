@@ -12,6 +12,11 @@ import numpy as np
 import os,sys
 import time
 
+os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
+ 
+# The GPU id to use, usually either "0";
+os.environ["CUDA_VISIBLE_DEVICES"]="0" 
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3' # removes the tensorflow initial information 
 
 def acc_likelihood(y_true, y_pred):
 	return K.mean(K.max(y_pred*y_true,1))
@@ -23,20 +28,13 @@ def get_available_gpus():
 def top_2_categorical_accuracy(y_true, y_pred):
     return metrics.top_k_categorical_accuracy(y_true, y_pred, k=2) 
 
-os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
- 
-# The GPU id to use, usually either "0";
-os.environ["CUDA_VISIBLE_DEVICES"]="0" 
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3' # removes the tensorflow initial information 
-
-
 batch_size = 32 # in each iteration, we consider 128 training examples at once
 num_epochs = 25 # we iterate twelve times over the entire training set
 num_epochs1 = 25 # epochs for the pre-training
 kernel_size = 3 # we will use 3x3 kernels throughout
 pool_size = 2 # we will use 2x2 pooling throughout
 conv_depth = 32 # use 32 kernels in both convolutional layers
-drop_prob_1 = 0.2 # dropout after pooling with probability 0.2
+drop_prob_1 = 0.2 # dropout after pooling with probability 0.25
 drop_prob_2 = 0.5 # dropout in the FC layer with probability 0.5
 hidden_size = 128 # there will be 128 neurons in both hidden layers
 l1_lambda = 0.0001 # use 0.0001 as a l1-regularisation factor
@@ -46,7 +44,7 @@ num_test = 10000 # there are 10000 test examples in MNIST
 
 height, width, depth = 28, 28, 1 # MNIST images are 28x28 and greyscale
 num_classes = 10 # there are 10 classes (1 per digit)
-num_fingers = 16
+num_fingers = 10
 
 #(x_train, y_train), (x_test, y_test) = mnist.load_data() # fetch MNIST data
 (x_train, y_train), (x_test, y_test) = np.load('mnistdata.npy')
@@ -58,8 +56,7 @@ x_test = x_test.astype('float32')
 x_train /= 255 # Normalise data to [0, 1] range
 x_test /= 255 # Normalise data to [0, 1] range
 
-matrix_train = np.load('train_robot'+".npy")
-matrix_test = np.load('test_robot'+".npy")
+c_test = y_test
 
 y_train = np_utils.to_categorical(y_train, num_classes) # One-hot encode the labels
 y_test = np_utils.to_categorical(y_test, num_classes) # One-hot encode the labels
@@ -73,14 +70,10 @@ acc1 = np.zeros(shape=(reps,nsplit))
 gpus = get_available_gpus().size
 
 #first model - number/finger association
-inp2 = Input(shape=(num_fingers,))
-out2 = Dense(num_classes, kernel_initializer='glorot_uniform', bias_initializer='zeros', activation='softmax', name='class_output2')(inp2) # Output softmax layer
-model2 = Model(inputs=inp2,outputs=out2)	
-model2.compile(loss='categorical_crossentropy',optimizer='adam',metrics=['accuracy'])
-model2.fit(matrix_train,y_train,epochs=5,shuffle=True,verbose=0)
-out_weights2 = model2.get_layer('class_output2').get_weights()
+matrix_train = y_train
+matrix_test = y_test
 
-folder = './Logs/'
+folder='./Logs/'
 
 for k in range(reps):
 
@@ -105,7 +98,7 @@ for k in range(reps):
 		o = BatchNormalization(name='block_normC2')(o)
 		o = Dropout(drop_prob_1)(o)
 		o = Flatten()(o)
-		o2 = Dense(num_fingers, activation='sigmoid',  kernel_initializer='glorot_uniform', name="fingers_inout")(o)
+		o2 = Dense(num_fingers, activation='softmax',  kernel_initializer='glorot_uniform', name="fingers_inout")(o)
 
 		# model1 = Model(inputs=inp,outputs=o2)
 		# model1.compile(loss='mse',optimizer='rmsprop',metrics=['mse'])
@@ -117,23 +110,17 @@ for k in range(reps):
 		o = Dense(84, kernel_initializer='he_uniform', activation='relu')(o) # Hidden ReLU layer
 		o = BatchNormalization(name='block_norm2')(o)
 		o = Dropout(drop_prob_2, name="hidden_dropout2")(o)
-		o = concatenate([o, o2],axis=1,name="concatenate") 
 		layerc = Dense(num_classes, activation='softmax', kernel_initializer='glorot_uniform', name='class_output')(o) # Output softmax layer
 
 		model = Model(inputs=[inp],outputs=[layerc,o2])
+		#plot_model(model)
 
-		model.compile(loss={"class_output": 'categorical_crossentropy', "fingers_inout": 'binary_crossentropy'},
+		model.compile(loss={"class_output": 'categorical_crossentropy', "fingers_inout": 'categorical_crossentropy'},
 			 		  loss_weights=[1,oweights[i]],
 					  optimizer='adam',
 					  metrics={"class_output": ['accuracy',top_2_categorical_accuracy,acc_likelihood], "fingers_inout": ['mse']})
 
-		hidden_size=84
-		out_weights = model.get_layer('class_output').get_weights()
-		out_weights[0][hidden_size:,:] = out_weights2[0]
-		out_weights[1] = out_weights2[1]
-		model.get_layer('class_output').set_weights(out_weights)
-
-		csv_logger = CSVLogger(folder+str(k)+'/training_robotP_conv2d'+"{:03d}".format(i)+'.log')
+		csv_logger = CSVLogger(folder+str(k)+'/training_class0_conv2d'+"{:03d}".format(i)+'.log')
 		history = model.fit([x_split], [y_split,matrix_split],
 									batch_size=batch_size,
 									epochs=num_epochs,
