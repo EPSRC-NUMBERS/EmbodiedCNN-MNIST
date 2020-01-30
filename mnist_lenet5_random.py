@@ -71,8 +71,9 @@ acc1 = np.zeros(shape=(reps,nsplit))
 gpus = get_available_gpus().size
 
 #first model - number/finger association
+folder='./Logs/'
 
-for k in range(1,reps):
+for k in range(reps):
 	#create randoms
 	random_inputs = np.random.random_sample((num_classes,num_fingers))
 
@@ -121,33 +122,28 @@ for k in range(1,reps):
 		o = BatchNormalization(name='block_normC2')(o)
 		o = Dropout(drop_prob_1)(o)
 		o = Flatten()(o)
-		o2 = Dense(num_fingers, activation='sigmoid', kernel_initializer='random_normal', 
+		o2 = Dense(num_fingers, activation='sigmoid', kernel_initializer='random_normal',name="fingers_inout")(o) 
 			#kernel_regularizer=l1(l1_lambda), #bias_regularizer=l1(l1_lambda),bias_initializer='zeros',
-			name="fingers_inout")(o)
-
-		# model1 = Model(inputs=inp,outputs=o2)
-		# model1.compile(loss='mse',optimizer='rmsprop',metrics=['mse'])
-		# model1.fit(x_split,matrix_split,epochs=1,shuffle=True,verbose=0)
 
 		o = Dense(120, kernel_initializer='he_uniform', activation='relu')(o) # Hidden ReLU layer
 		o = BatchNormalization(name='block_norm1')(o)
 		o = Dropout(drop_prob_2, name="hidden_dropout1")(o)
 		o = Dense(84, kernel_initializer='he_uniform', activation='relu')(o) # Hidden ReLU layer
-		# o = BatchNormalization(name='block_norm2')(o)
-		# o = Dropout(drop_prob_2, name="hidden_dropout2")(o)
+		o = BatchNormalization(name='block_norm2')(o)
+		o = Dropout(drop_prob_2, name="hidden_dropout2")(o)
 		o = concatenate([o, o2],axis=1,name="concatenate") 
-		layerc = Dense(num_classes, activation='softmax', kernel_initializer='zeros', name='class_output')(o) # Output softmax layer
+		layerc = Dense(num_classes, activation='softmax', kernel_initializer='glorot_uniform', name='class_output')(o) # Output softmax layer
 
 		model = Model(inputs=[inp],outputs=[layerc,o2])
+		#plot_model(model)
 
-		model.compile(loss={"class_output": 'categorical_crossentropy', "fingers_inout": 'binary_crossentropy'},
+		model.compile(loss={"class_output": 'categorical_crossentropy', "fingers_inout": 'categorical_crossentropy'},
 			 		  loss_weights=[1,oweights[i]],
 					  optimizer='adam',
 					  metrics={"class_output": ['accuracy',top_2_categorical_accuracy,acc_likelihood], "fingers_inout": ['mse']})
 
 		hidden_size=84
 		out_weights = model.get_layer('class_output').get_weights()
-		#out_weights[0][:hidden_size,:] = 0
 		out_weights[0][hidden_size:,:] = out_weights2[0]
 		out_weights[1] = out_weights2[1]
 		model.get_layer('class_output').set_weights(out_weights)
@@ -155,8 +151,8 @@ for k in range(1,reps):
 		batch_size = 32 
 		if (i>5):
 			batch_size = 128 
-
-		csv_logger = CSVLogger('./Logs/'+str(k)+'/training_random2_conv2d'+"{:03d}".format(i)+'.log')
+			
+		csv_logger = CSVLogger(folder+str(k)+'/training_random2_conv2d'+"{:03d}".format(i)+'.log')
 		history = model.fit([x_split], [y_split,matrix_split],
 									batch_size=batch_size,
 									epochs=num_epochs,
@@ -165,14 +161,14 @@ for k in range(1,reps):
 									verbose=0,
 									validation_data=([x_test], [y_test,matrix_test]))
 
-		score[i] = model.evaluate([x_test], [y_test,matrix_test], verbose=0)
 		print('Current split:',i,k)
-		print('Test cumulative loss:', score[i][0])
-		print('Test classification loss:', score[i][1])
-		print('Test finger loss:', score[i][2])
-		print('Test classification accuracy:', score[i][3])
-		print('Test classification likelihood:', score[i][4])
-		print('Test fingers mse:', score[i][5])
+		print('Test classification accuracy:', history.history['val_class_output_acc'][0])
+		print('Test classification likelihood:', history.history['val_class_output_acc_likelihood'][0])
+		print('Test classification top2 acc:', history.history['val_class_output_top_2_categorical_accuracy'][0])
+		print('-------')
+		print('Test classification accuracy:', history.history['val_class_output_acc'][num_epochs-1])
+		print('Test classification likelihood:', history.history['val_class_output_acc_likelihood'][num_epochs-1])
+		print('Test classification top2 acc:', history.history['val_class_output_top_2_categorical_accuracy'][num_epochs-1])
 		K.clear_session()
 		end = time.time()
 		print('Elapsed time', end-start)
