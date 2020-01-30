@@ -105,7 +105,9 @@ for k in range(reps):
 		o = BatchNormalization(name='block_normC2')(o)
 		o = Dropout(drop_prob_1)(o)
 		o = Flatten()(o)
-		o2 = Dense(num_fingers, activation='sigmoid',  kernel_initializer='glorot_uniform', name="fingers_inout")(o)
+		o2 = Dense(num_fingers, activation='sigmoid', kernel_initializer='random_normal', 
+			kernel_regularizer=l1(l1_lambda), bias_regularizer=l1(l1_lambda),
+			bias_initializer='zeros')(o)
 
 		# model1 = Model(inputs=inp,outputs=o2)
 		# model1.compile(loss='mse',optimizer='rmsprop',metrics=['mse'])
