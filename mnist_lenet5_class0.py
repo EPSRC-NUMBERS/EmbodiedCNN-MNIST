@@ -29,7 +29,7 @@ def top_2_categorical_accuracy(y_true, y_pred):
     return metrics.top_k_categorical_accuracy(y_true, y_pred, k=2) 
 
 batch_size = 32 # in each iteration, we consider 128 training examples at once
-num_epochs = 25 # we iterate twelve times over the entire training set
+num_epochs = 50 # we iterate twelve times over the entire training set
 num_epochs1 = 25 # epochs for the pre-training
 kernel_size = 3 # we will use 3x3 kernels throughout
 pool_size = 2 # we will use 2x2 pooling throughout
@@ -61,9 +61,9 @@ c_test = y_test
 y_train = np_utils.to_categorical(y_train, num_classes) # One-hot encode the labels
 y_test = np_utils.to_categorical(y_test, num_classes) # One-hot encode the labels
 
-reps = 5
+reps = 21
 ssplit = np.array([128,256,512,1024,3200,6400,60000]) # number of examples
-oweights = np.array([1,1,1,0.5,0.5,0.5,0.3])
+oweights = np.array([1,1,0.8,0.4,0.3,0.3,0.1])
 nsplit = ssplit.shape[0]
 score = np.zeros(shape=(nsplit,7))
 acc1 = np.zeros(shape=(reps,nsplit))
@@ -99,10 +99,6 @@ for k in range(reps):
 		o = Dropout(drop_prob_1)(o)
 		o = Flatten()(o)
 		o2 = Dense(num_fingers, activation='softmax',  kernel_initializer='glorot_uniform', name="fingers_inout")(o)
-
-		# model1 = Model(inputs=inp,outputs=o2)
-		# model1.compile(loss='mse',optimizer='rmsprop',metrics=['mse'])
-		# model1.fit(x_split,matrix_split,epochs=1,shuffle=True,verbose=0)
 
 		o = Dense(120, kernel_initializer='he_uniform', activation='relu')(o) # Hidden ReLU layer
 		o = BatchNormalization(name='block_norm1')(o)

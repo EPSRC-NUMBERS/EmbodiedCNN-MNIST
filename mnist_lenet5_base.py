@@ -52,7 +52,7 @@ x_test /= 255 # Normalise data to [0, 1] range
 y_train = np_utils.to_categorical(y_train, num_classes) # Categorical labels - One-hot encode
 y_test = np_utils.to_categorical(y_test, num_classes) # same as train
 
-reps=5
+reps=21
 ssplit = np.array([128,256,512,1024,3200,6400,60000]) # number of examples
 nsplit = ssplit.shape[0]
 score = np.zeros(shape=(nsplit,3))

@@ -62,9 +62,9 @@ c_test = y_test
 y_train = np_utils.to_categorical(y_train, num_classes) # One-hot encode the labels
 y_test = np_utils.to_categorical(y_test, num_classes) # One-hot encode the labels
 
-reps = 5
+reps = 21
 ssplit = np.array([128,256,512,1024,3200,6400,60000]) # number of examples
-oweights = np.array([1,1,1,0.5,0.5,0.5,0.25])
+oweights = np.array([1,1,0.8,0.4,0.3,0.3,0.1])
 nsplit = ssplit.shape[0]
 score = np.zeros(shape=(nsplit,7))
 acc1 = np.zeros(shape=(reps,nsplit))
@@ -121,33 +121,40 @@ for k in range(1,reps):
 		o = BatchNormalization(name='block_normC2')(o)
 		o = Dropout(drop_prob_1)(o)
 		o = Flatten()(o)
-		o2 = Dense(num_fingers, activation='sigmoid',  kernel_initializer='glorot_uniform', name="fingers_inout")(o)
+		o2 = Dense(num_fingers, activation='sigmoid', kernel_initializer='random_normal', 
+			#kernel_regularizer=l1(l1_lambda), #bias_regularizer=l1(l1_lambda),bias_initializer='zeros',
+			name="fingers_inout")(o)
 
-		model1 = Model(inputs=inp,outputs=o2)
-		model1.compile(loss='mse',optimizer='rmsprop',metrics=['mse'])
-		model1.fit(x_split,matrix_split,epochs=1,shuffle=True,verbose=0)
+		# model1 = Model(inputs=inp,outputs=o2)
+		# model1.compile(loss='mse',optimizer='rmsprop',metrics=['mse'])
+		# model1.fit(x_split,matrix_split,epochs=1,shuffle=True,verbose=0)
 
 		o = Dense(120, kernel_initializer='he_uniform', activation='relu')(o) # Hidden ReLU layer
 		o = BatchNormalization(name='block_norm1')(o)
 		o = Dropout(drop_prob_2, name="hidden_dropout1")(o)
 		o = Dense(84, kernel_initializer='he_uniform', activation='relu')(o) # Hidden ReLU layer
-		o = BatchNormalization(name='block_norm2')(o)
-		o = Dropout(drop_prob_2, name="hidden_dropout2")(o)
+		# o = BatchNormalization(name='block_norm2')(o)
+		# o = Dropout(drop_prob_2, name="hidden_dropout2")(o)
 		o = concatenate([o, o2],axis=1,name="concatenate") 
-		layerc = Dense(num_classes, activation='softmax', kernel_initializer='glorot_uniform', name='class_output')(o2) # Output softmax layer
+		layerc = Dense(num_classes, activation='softmax', kernel_initializer='zeros', name='class_output')(o) # Output softmax layer
 
 		model = Model(inputs=[inp],outputs=[layerc,o2])
 
 		model.compile(loss={"class_output": 'categorical_crossentropy', "fingers_inout": 'binary_crossentropy'},
-			 		  loss_weights=[1,1],
+			 		  loss_weights=[1,oweights[i]],
 					  optimizer='adam',
 					  metrics={"class_output": ['accuracy',top_2_categorical_accuracy,acc_likelihood], "fingers_inout": ['mse']})
 
-		hidden_size=0
+		hidden_size=84
 		out_weights = model.get_layer('class_output').get_weights()
+		#out_weights[0][:hidden_size,:] = 0
 		out_weights[0][hidden_size:,:] = out_weights2[0]
 		out_weights[1] = out_weights2[1]
 		model.get_layer('class_output').set_weights(out_weights)
+
+		batch_size = 32 
+		if (i>5):
+			batch_size = 128 
 
 		csv_logger = CSVLogger('./Logs/'+str(k)+'/training_random2_conv2d'+"{:03d}".format(i)+'.log')
 		history = model.fit([x_split], [y_split,matrix_split],
