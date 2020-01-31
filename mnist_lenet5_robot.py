@@ -115,7 +115,7 @@ for k in range(reps):
 		# o = BatchNormalization(name='block_norm2')(o)
 		# o = Dropout(drop_prob_2, name="hidden_dropout2")(o)
 		o = concatenate([o, o2],axis=1,name="concatenate") 
-		layerc = Dense(num_classes, activation='softmax', kernel_initializer='glorot_uniform', name='class_output')(o) # Output softmax layer
+		layerc = Dense(num_classes, activation='softmax', kernel_initializer='random_uniform', name='class_output')(o) # Output softmax layer
 
 		model = Model(inputs=[inp],outputs=[layerc,o2])
 
