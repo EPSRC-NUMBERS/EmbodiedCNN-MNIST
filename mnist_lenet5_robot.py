@@ -105,13 +105,8 @@ for k in range(reps):
 		o = BatchNormalization(name='block_normC2')(o)
 		o = Dropout(drop_prob_1)(o)
 		o = Flatten()(o)
-		o2 = Dense(num_fingers, activation='sigmoid', kernel_initializer='random_normal', 
+		o2 = Dense(num_fingers, activation='sigmoid', kernel_initializer='random_normal', name="fingers_inout")(o)
 			#kernel_regularizer=l1(l1_lambda), #bias_regularizer=l1(l1_lambda),bias_initializer='zeros',
-			name="fingers_inout")(o)
-
-		# model1 = Model(inputs=inp,outputs=o2)
-		# model1.compile(loss='mse',optimizer='rmsprop',metrics=['mse'])
-		# model1.fit(x_split,matrix_split,epochs=1,shuffle=True,verbose=0)
 
 		o = Dense(120, kernel_initializer='he_uniform', activation='relu')(o) # Hidden ReLU layer
 		o = BatchNormalization(name='block_norm1')(o)
@@ -120,7 +115,7 @@ for k in range(reps):
 		# o = BatchNormalization(name='block_norm2')(o)
 		# o = Dropout(drop_prob_2, name="hidden_dropout2")(o)
 		o = concatenate([o, o2],axis=1,name="concatenate") 
-		layerc = Dense(num_classes, activation='softmax', kernel_initializer='zeros', name='class_output')(o) # Output softmax layer
+		layerc = Dense(num_classes, activation='softmax', kernel_initializer='glorot_uniform', name='class_output')(o) # Output softmax layer
 
 		model = Model(inputs=[inp],outputs=[layerc,o2])
 

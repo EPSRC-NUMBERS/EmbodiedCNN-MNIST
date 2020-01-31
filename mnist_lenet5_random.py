@@ -92,7 +92,7 @@ for k in range(5,reps):
 		s=s+1
 
 	#first model - number/finger association
-	inp2 = Input(shape=(16,))
+	inp2 = Input(shape=(num_fingers,))
 	out2 = Dense(num_classes, kernel_initializer='glorot_uniform', bias_initializer='zeros', activation='softmax', name='class_output2')(inp2) # Output softmax layer
 	model2 = Model(inputs=inp2,outputs=out2)	
 	model2.compile(loss='categorical_crossentropy',optimizer='adam',metrics=['accuracy'])
@@ -109,8 +109,6 @@ for k in range(5,reps):
 		y_split = y_train[(ssplit[i]*a):(ssplit[i]*(a+1))]
 		matrix_split = matrix_train[(ssplit[i]*a):(ssplit[i]*(a+1))]
 		print('a=',a,'split = ',(ssplit[i]*a),'-',(ssplit[i]*(a+1)),' N = ',x_split.shape[0])
-		drop_prob_1 = 0.2
-		drop_prob_2 = 0.5
 
 		inp = Input(shape=(height, width, depth)) # N.B. TensorFlow back-end expects channel dimension last
 		o = Convolution2D(filters=6, kernel_size=(3, 3), padding='same', kernel_initializer='he_uniform', activation='relu')(inp)
@@ -129,8 +127,8 @@ for k in range(5,reps):
 		o = BatchNormalization(name='block_norm1')(o)
 		o = Dropout(drop_prob_2, name="hidden_dropout1")(o)
 		o = Dense(84, kernel_initializer='he_uniform', activation='relu')(o) # Hidden ReLU layer
-		o = BatchNormalization(name='block_norm2')(o)
-		o = Dropout(drop_prob_2, name="hidden_dropout2")(o)
+		#o = BatchNormalization(name='block_norm2')(o)
+		#o = Dropout(drop_prob_2, name="hidden_dropout2")(o)
 		o = concatenate([o, o2],axis=1,name="concatenate") 
 		layerc = Dense(num_classes, activation='softmax', kernel_initializer='glorot_uniform', name='class_output')(o) # Output softmax layer
 
