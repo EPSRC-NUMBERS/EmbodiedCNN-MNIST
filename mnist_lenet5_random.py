@@ -137,7 +137,7 @@ for k in range(5,reps):
 		model = Model(inputs=[inp],outputs=[layerc,o2])
 		#plot_model(model)
 
-		model.compile(loss={"class_output": 'categorical_crossentropy', "fingers_inout": 'categorical_crossentropy'},
+		model.compile(loss={"class_output": 'categorical_crossentropy', "fingers_inout": 'binary_crossentropy'},
 			 		  loss_weights=[1,oweights[i]],
 					  optimizer='adam',
 					  metrics={"class_output": ['accuracy',top_2_categorical_accuracy,acc_likelihood], "fingers_inout": ['mse']})
