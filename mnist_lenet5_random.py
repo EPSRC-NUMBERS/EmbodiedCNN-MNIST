@@ -73,7 +73,7 @@ gpus = get_available_gpus().size
 #first model - number/finger association
 folder='./Logs/'
 
-for k in range(reps):
+for k in range(4,5):
 	#create randoms
 	random_inputs = np.random.random_sample((num_classes,num_fingers))
 
@@ -102,7 +102,7 @@ for k in range(reps):
 	if not os.path.exists('./Logs/'+str(k)):
 		os.makedirs('./Logs/'+str(k))
 
-	for i in range(nsplit):
+	for i in range(6,7):
 		start = time.time()
 		a=k%(x_train.shape[0]/ssplit[i])
 		x_split = x_train[(ssplit[i]*a):(ssplit[i]*(a+1))]
@@ -137,7 +137,7 @@ for k in range(reps):
 		model = Model(inputs=[inp],outputs=[layerc,o2])
 		#plot_model(model)
 
-		model.compile(loss={"class_output": 'categorical_crossentropy', "fingers_inout": 'categorical_crossentropy'},
+		model.compile(loss={"class_output": 'categorical_crossentropy', "fingers_inout": 'binary_crossentropy'},
 			 		  loss_weights=[1,oweights[i]],
 					  optimizer='adam',
 					  metrics={"class_output": ['accuracy',top_2_categorical_accuracy,acc_likelihood], "fingers_inout": ['mse']})

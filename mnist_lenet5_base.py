@@ -93,6 +93,8 @@ for k in range(reps):
 		model = Model(inputs=inp, outputs=o) # To define a model, just specify its input and output layers
 
 		plot_model(model)
+		model.summary()
+		exit()
 
 		model.compile(loss='categorical_crossentropy', # using the cross-entropy loss function
 		              optimizer='adam', # using the Adam optimiser
