@@ -118,7 +118,6 @@ for k in range(reps):
 		o = Dropout(drop_prob_2, name="hidden_dropout1")(o)
 		o = Dense(84, kernel_initializer='he_uniform', activation='relu')(o) # Hidden ReLU layer
 		o = BatchNormalization(name='block_norm2')(o)
-		o2 = BatchNormalization(name='block_norm2')(o2)
 		o = concatenate([o, o2],axis=1,name="concatenate") 	
 		o = Dropout(drop_prob_2, name="hidden_dropout2")(o)
 		layerc = Dense(num_classes, activation='softmax', kernel_initializer='glorot_uniform', name='class_output')(o) # Output softmax layer
