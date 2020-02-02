@@ -29,12 +29,12 @@ def top_2_categorical_accuracy(y_true, y_pred):
     return metrics.top_k_categorical_accuracy(y_true, y_pred, k=2) 
 
 batch_size = 32 # in each iteration, we consider 128 training examples at once
-num_epochs = 25 # we iterate twelve times over the entire training set
+num_epochs = 50 # we iterate twelve times over the entire training set
 num_epochs1 = 25 # epochs for the pre-training
 kernel_size = 3 # we will use 3x3 kernels throughout
 pool_size = 2 # we will use 2x2 pooling throughout
 conv_depth = 32 # use 32 kernels in both convolutional layers
-drop_prob_1 = 0.25 # dropout after pooling with probability 0.25
+drop_prob_1 = 0.2 # dropout after pooling with probability 0.25
 drop_prob_2 = 0.5 # dropout in the FC layer with probability 0.5
 hidden_size = 128 # there will be 128 neurons in both hidden layers
 l1_lambda = 0.0001 # use 0.0001 as a l1-regularisation factor
@@ -73,7 +73,7 @@ gpus = get_available_gpus().size
 #first model - number/finger association
 folder='./Logs/'
 
-for k in range(4,5):
+for k in range(reps):
 	#create randoms
 	random_inputs = np.random.random_sample((num_classes,num_fingers))
 
@@ -102,7 +102,7 @@ for k in range(4,5):
 	if not os.path.exists('./Logs/'+str(k)):
 		os.makedirs('./Logs/'+str(k))
 
-	for i in range(6,7):
+	for i in range(nsplit):
 		start = time.time()
 		a=k%(x_train.shape[0]/ssplit[i])
 		x_split = x_train[(ssplit[i]*a):(ssplit[i]*(a+1))]
