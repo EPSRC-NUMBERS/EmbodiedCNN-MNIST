@@ -64,7 +64,7 @@ y_test = np_utils.to_categorical(y_test, num_classes) # One-hot encode the label
 
 reps = 21
 ssplit = np.array([128,256,512,1024,3200,6400,60000]) # number of examples
-oweights = np.array([1,1,0.8,0.4,0.3,0.3,0.1])
+oweights = np.array([1,1,0.8,0.4,0.2,0.2,0.1])
 nsplit = ssplit.shape[0]
 score = np.zeros(shape=(nsplit,7))
 acc1 = np.zeros(shape=(reps,nsplit))
@@ -109,8 +109,6 @@ for k in range(reps):
 		y_split = y_train[(ssplit[i]*a):(ssplit[i]*(a+1))]
 		matrix_split = matrix_train[(ssplit[i]*a):(ssplit[i]*(a+1))]
 		print('a=',a,'split = ',(ssplit[i]*a),'-',(ssplit[i]*(a+1)),' N = ',x_split.shape[0])
-		drop_prob_1 = 0.2
-		drop_prob_2 = 0.5
 
 		inp = Input(shape=(height, width, depth)) # N.B. TensorFlow back-end expects channel dimension last
 		o = Convolution2D(filters=6, kernel_size=(3, 3), padding='same', kernel_initializer='he_uniform', activation='relu')(inp)

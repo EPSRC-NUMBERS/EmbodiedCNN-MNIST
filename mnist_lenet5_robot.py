@@ -77,7 +77,7 @@ inp2 = Input(shape=(num_fingers,))
 out2 = Dense(num_classes, kernel_initializer='glorot_uniform', bias_initializer='zeros', activation='softmax', name='class_output2')(inp2) # Output softmax layer
 model2 = Model(inputs=inp2,outputs=out2)	
 model2.compile(loss='categorical_crossentropy',optimizer='adam',metrics=['accuracy'])
-model2.fit(matrix_train,y_train,epochs=6,shuffle=True,verbose=0)
+model2.fit(matrix_train,y_train,epochs=5,shuffle=True,verbose=0)
 out_weights2 = model2.get_layer('class_output2').get_weights()
 
 folder = './Logs/'
@@ -120,18 +120,17 @@ for k in range(reps):
 		o = BatchNormalization(name='block_norm2')(o)
 		o = Dropout(drop_prob_2, name="hidden_dropout2")(o)
 		o = concatenate([o, o2],axis=1,name="concatenate") 
-		layerc = Dense(num_classes, activation='softmax', kernel_initializer='random_uniform', name='class_output')(o) # Output softmax layer
+		layerc = Dense(num_classes, activation='softmax', kernel_initializer='glorot_uniform', name='class_output')(o) # Output softmax layer
 
 		model = Model(inputs=[inp],outputs=[layerc,o2])
 
-		model.compile(loss={"class_output": 'categorical_crossentropy', "fingers_inout": 'binary_crossentropy'},
+		model.compile(loss={"class_output": 'categorical_crossentropy', "fingers_inout": 'categorical_crossentropy'},
 			 		  loss_weights=[1,oweights[i]],
 					  optimizer='adam',
 					  metrics={"class_output": ['accuracy',top_2_categorical_accuracy,acc_likelihood], "fingers_inout": ['mse']})
 
 		hidden_size=84
 		out_weights = model.get_layer('class_output').get_weights()
-		#out_weights[0][:hidden_size,:] = 0
 		out_weights[0][hidden_size:,:] = out_weights2[0]
 		out_weights[1] = out_weights2[1]
 		model.get_layer('class_output').set_weights(out_weights)
