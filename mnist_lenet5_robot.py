@@ -109,10 +109,6 @@ for k in range(reps):
 			#kernel_regularizer=l1(l1_lambda), #bias_regularizer=l1(l1_lambda),bias_initializer='zeros',
 			name="fingers_inout")(o)
 
-		# model1 = Model(inputs=inp,outputs=o2)
-		# model1.compile(loss='mse',optimizer='rmsprop',metrics=['mse'])
-		# model1.fit(x_split,matrix_split,epochs=1,shuffle=True,verbose=0)
-
 		o = Dense(120, kernel_initializer='he_uniform', activation='relu')(o) # Hidden ReLU layer
 		o = BatchNormalization(name='block_norm1')(o)
 		o = Dropout(drop_prob_2, name="hidden_dropout1")(o)
