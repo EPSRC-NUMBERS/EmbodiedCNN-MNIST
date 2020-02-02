@@ -66,7 +66,7 @@ y_test = np_utils.to_categorical(y_test, num_classes) # One-hot encode the label
 
 reps = 21
 ssplit = np.array([128,256,512,1024,3200,6400,60000]) # number of examples
-oweights = np.array([1,1,0.8,0.4,0.4,0.4,0.1])
+oweights = np.array([1,1,0.8,0.4,0.4,0.4,0.3])
 nsplit = ssplit.shape[0]
 score = np.zeros(shape=(nsplit,7))
 acc1 = np.zeros(shape=(reps,nsplit))
