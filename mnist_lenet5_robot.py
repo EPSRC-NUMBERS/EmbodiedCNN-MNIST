@@ -134,6 +134,8 @@ for k in range(reps):
 		batch_size = 32 
 		if (i>5):
 			batch_size = 128 
+		plot_model(model)
+		exit()
 
 		csv_logger = CSVLogger(folder+str(k)+'/training_robotP_conv2d'+"{:03d}".format(i)+'.log')
 		history = model.fit([x_split], [y_split,matrix_split],
