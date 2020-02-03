@@ -24,7 +24,7 @@ if not os.path.exists(folder_output):
 	os.makedirs(folder_output+'stats')
 	os.makedirs(folder_output+'comparisons')
 
-N=20 #number of epochs
+N=50 #number of epochs
 reps=21
 
 ssplit = np.zeros((7,1)) # number of examples
