@@ -3198,3 +3198,5 @@ Logs (copy)/output/test/stats/results_mnist_robot003.csv
 Logs (copy)/output/test/stats/results_mnist_robot004.csv
 Logs (copy)/output/test/stats/results_mnist_robot005.csv
 Logs (copy)/output/test/stats/results_mnist_robot006.csv
+prepare_results_test.py
+prepare_results_whole.py

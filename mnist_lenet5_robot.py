@@ -64,7 +64,7 @@ matrix_test = np.load('test_robot'+".npy")
 y_train = np_utils.to_categorical(y_train, num_classes) # One-hot encode the labels
 y_test = np_utils.to_categorical(y_test, num_classes) # One-hot encode the labels
 
-reps = 11
+reps = 21
 ssplit = np.array([128,256,512,1024,3200,6400,60000]) # number of examples
 oweights = np.array([1,1,0.8,0.4,0.3,0.3,0.1])
 nsplit = ssplit.shape[0]

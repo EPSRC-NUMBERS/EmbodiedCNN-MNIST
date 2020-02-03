@@ -26,7 +26,7 @@ if not os.path.exists(folder_output):
 	os.makedirs(folder_output+'comparisons')
 
 N=20 #number of epochs
-reps=21
+reps=11
 
 ssplit = np.array([128,256,512,1024,3200,6400,60000]) # number of examples
 nsplit = ssplit.shape[0]
